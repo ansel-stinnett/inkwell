@@ -11,8 +11,8 @@ Definition of Done: see README.md
 | US-05 | As a reader, I want to comment on a post... | Medium | 3 | Backlog |
 | US-06 | As a reader, I want to follow an author... | Medium | 3 | Backlog |
 | US-07 | As an author, I want basic analytics... | Low | 5 | Backlog |
-| US-08 | As a register user, I want to reset my password in case i forget... | Medium | 3 | Backlog |
-| US-09 | As a author, I want to edit a post after publishing... | Medium | 3 |backlog |
+| US-08 | As a registered user, I want to reset my password in case i forget it so i can regain access to my account. | Medium | 3 | Backlog |
+| US-09 | As a author, I want to edit a post after publishing that way I may correct any error or mistake in my post | Medium | 3 |backlog |
 
 
 ## estimation notes
