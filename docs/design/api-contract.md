@@ -48,3 +48,18 @@ Success: 200 { posts: PostPublic[], page: number, hasMore: boolean }
 ```
 
 Maps to: Browse Feed (US-04)
+---
+
+## POST /api/posts/:id/comments
+
+```
+Request: { body: string }
+Success: 201 { comment: CommentPublic }
+Errors:
+  400 EMPTY_COMMENT_BODY   — "Comment body cannot be empty."
+  400 COMMENT_TOO_LONG     — "Comment exceeds the maximum length."
+  401 NOT_AUTHENTICATED    — "You must be logged in to comment."
+  404 POST_NOT_FOUND       — "Post not found."
+```
+
+Maps to: Comment on a Post (US-05)
