@@ -65,7 +65,7 @@ export const AuthService = {
     }
 
     const tokens = TokenService.issueTokens(user);
-    return { user, ...tokens };
+    return { user: toPublicUser(user), ...tokens };
   },
 };
 
