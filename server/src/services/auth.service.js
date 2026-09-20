@@ -12,7 +12,16 @@ class WeakPasswordError extends Error {}
 class InvalidCredentialsError extends Error {}
 
 const MIN_PASSWORD_LENGTH = 8;
-
+// Projects a User entity down to the UserPublic shape promised by the
+// API contract (docs/design/api-contract.md). Fields like passwordHash
+// are internal and must never cross the API boundary.
+function toPublicUser(user) {
+  return {
+    id: user.id,
+    email: user.email,
+    displayName: user.displayName,
+  };
+}
 export const AuthService = {
   async register({ email, displayName, password }) {
     assertNonEmpty(email, "email", "MISSING_EMAIL");
@@ -41,7 +50,7 @@ export const AuthService = {
     }
 
     const tokens = TokenService.issueTokens(user);
-    return { user, ...tokens };
+    return { user: toPublicUser(user), ...tokens };
   },
 
   async login({ email, password }) {
