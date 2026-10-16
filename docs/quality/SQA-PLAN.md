@@ -12,11 +12,10 @@
 - Review findings logged in docs/reviews/
 
 ## Testing (expanded in Lectures 12-14)
-- Unit tests: Services and Repositories (Jest) — starting Lecture 12
+- Unit tests: Services and Repositories (Jest) — ACTIVE as of lecture 12
 - Integration tests: Routes (Supertest) — starting Lecture 13
 - End-to-end tests: critical user flows (Playwright) — starting Lecture 14
-- As of today there are no automated tests. Verification is manual: curl against
-  the running API, and DevTools device-toolbar checks at mobile widths.
+- as of lecture 12 Authservice and PostService have unit test coverage (12 tests). Repositories and routes are still verified manually.
 
 ## Defect Tracking
 - All discovered defects (via review, testing, or manual use) recorded in
