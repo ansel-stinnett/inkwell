@@ -12,11 +12,11 @@
 - Review findings logged in docs/reviews/
 
 ## Testing (expanded in Lectures 12-14)
-- Unit tests: Services and Repositories (Jest) — ACTIVE as of lecture 12
-- Integration tests: Routes (Supertest) — starting Lecture 13
+- Unit tests: Services (Jest) — ACTIVE (Lecture 12)
+- Integration tests: Routes → Services → Repositories against a real isolated
+  test database, inkwell_test (Supertest) — ACTIVE (Lecture 13)
+- Component tests: React components (RTL + Vitest) — ACTIVE (Lecture 13)
 - End-to-end tests: critical user flows (Playwright) — starting Lecture 14
-- as of lecture 12 Authservice and PostService have unit test coverage (12 tests). Repositories and routes are still verified manually.
-
 ## Defect Tracking
 - All discovered defects (via review, testing, or manual use) recorded in
   docs/quality/DEFECT-LOG.md
