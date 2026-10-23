@@ -72,3 +72,50 @@ test("a registered user can then log in with the same credentials (US-01 + US-02
   // Lecture 8's defect D-002: login must not leak the password hash.
   expect(loginRes.body.user.passwordHash).toBeUndefined();
 });
+
+// Security regression test for the threat model's Critical row: Alice sends
+// her own valid token but puts Bob's id in the body. The post must be
+// attributed to Alice, not Bob.
+test("a forged authorId in the request body is ignored (spoofing mitigation)", async () => {
+  const alice = await request(app)
+    .post("/api/auth/register")
+    .send({ email: "alice@example.com", displayName: "Alice", password: "correcthorse" });
+
+  const bob = await request(app)
+    .post("/api/auth/register")
+    .send({ email: "bob@example.com", displayName: "Bob", password: "correcthorse" });
+
+  const res = await request(app)
+    .post("/api/posts")
+    .set("Authorization", `Bearer ${alice.body.accessToken}`)
+    .send({ authorId: bob.body.user.id, title: "Forged", body: "Published as Bob?" });
+
+  expect(res.status).toBe(201);
+  expect(res.body.authorId).toBe(alice.body.user.id);
+  expect(res.body.authorId).not.toBe(bob.body.user.id);
+});
+
+test("publishing without a token is rejected", async () => {
+  const res = await request(app)
+    .post("/api/posts")
+    .send({ authorId: "whatever", title: "No token", body: "Should fail." });
+
+  expect(res.status).toBe(401);
+  expect(res.body.error.code).toBe("UNAUTHENTICATED");
+});
+
+// Exercise 1: the threat model's Denial of Service row. An oversized
+// pageSize must be clamped, not honored.
+test("an oversized pageSize is clamped to the maximum", async () => {
+  const res = await request(app).get("/api/posts?page=1&pageSize=100000");
+
+  expect(res.status).toBe(200);
+  expect(res.body.pageSize).toBe(50);
+});
+
+test("a negative pageSize is clamped to the minimum", async () => {
+  const res = await request(app).get("/api/posts?page=1&pageSize=-5");
+
+  expect(res.status).toBe(200);
+  expect(res.body.pageSize).toBe(1);
+});
