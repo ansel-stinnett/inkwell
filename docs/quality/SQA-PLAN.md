@@ -13,10 +13,15 @@
 
 ## Testing (expanded in Lectures 12-14)
 - Unit tests: Services (Jest) — ACTIVE (Lecture 12)
-- Integration tests: Routes → Services → Repositories against a real isolated
-  test database, inkwell_test (Supertest) — ACTIVE (Lecture 13)
+- Integration tests: Routes → Services → Repositories, real test DB
+  (Supertest) — ACTIVE (Lecture 13)
 - Component tests: React components (RTL + Vitest) — ACTIVE (Lecture 13)
-- End-to-end tests: critical user flows (Playwright) — starting Lecture 14
+- End-to-end tests: critical user flows, mobile + tablet + desktop viewports
+  (Playwright) — ACTIVE (Lecture 14)
+- Automated accessibility checks (axe-core) — ACTIVE (Lecture 14)
+- Documentation verification (README) — ACTIVE (Lecture 14)
+- Security testing — starting Lecture 15
+- Performance/load testing — deferred; revisit at Lecture 19-20
 ## Defect Tracking
 - All discovered defects (via review, testing, or manual use) recorded in
   docs/quality/DEFECT-LOG.md
