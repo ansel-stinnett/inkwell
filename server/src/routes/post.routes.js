@@ -55,4 +55,25 @@ router.get("/posts", async (req, res, next) => {
   }
 });
 
+// A01 (Broken Access Control): requireAuth proves WHO the caller is;
+// the ownership check proves they are allowed to act on THIS resource.
+// Authentication without authorization is the vulnerability.
+router.delete("/posts/:id", requireAuth, async (req, res, next) => {
+  try {
+    const post = await PostService.getById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ error: { code: "NOT_FOUND", message: "Post not found." } });
+    }
+
+    if (post.authorId !== req.user.id) {
+      return res.status(403).json({ error: { code: "FORBIDDEN", message: "You can only delete your own posts." } });
+    }
+
+    await PostService.delete(req.params.id);
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

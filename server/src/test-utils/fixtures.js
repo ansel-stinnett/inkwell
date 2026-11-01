@@ -2,6 +2,7 @@
 
 import { prisma } from "../db/client.js";
 import bcrypt from "bcrypt";
+import { TokenService } from "../services/token.service.js";
 
 let userCounter = 0;
 
@@ -19,4 +20,20 @@ export async function resetDatabase() {
   await prisma.post.deleteMany();
   await prisma.tag.deleteMany();
   await prisma.user.deleteMany();
+}
+
+export async function createTestPost({ authorId }) {
+  return prisma.post.create({
+    data: {
+      authorId,
+      title: "Fixture post",
+      body: "Fixture body",
+      status: "PUBLISHED",
+      publishedAt: new Date(),
+    },
+  });
+}
+
+export function tokenFor(user) {
+  return TokenService.issueTokens(user).accessToken;
 }

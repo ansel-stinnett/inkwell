@@ -31,6 +31,14 @@ export const PostService = {
     return post;
   },
 
+  async getById(id) {
+    return PostRepository.findById(id);
+  },
+
+  async delete(id) {
+    return PostRepository.deleteById(id);
+  },
+
   async listPublished({ page = 1, pageSize = 10 }) {
     const { posts, hasMore } = await PostRepository.findPublished({ page, pageSize });
     return { posts, page, hasMore };
