@@ -126,6 +126,11 @@ jobs:
           --health-retries 5
     env:
       DATABASE_URL: postgresql://inkwell:inkwell@localhost:5432/inkwell_test
+      NODE_ENV: test
+      # authRateLimiter (Lecture 15) skips itself when NODE_ENV=test. Without
+      # this, the limit of 5 auth requests per 10 minutes per IP is spent by
+      # the first two viewports (register + login each), so the third
+      # viewport's login is rejected and the test fails in CI only.
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
