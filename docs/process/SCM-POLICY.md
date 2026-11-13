@@ -18,10 +18,14 @@ size does not need the overhead of synchronizing long-lived `develop` and
 
 ### Current deviation
 
-Through Lecture 17 this project has had a single contributor, so commits have
-gone directly to `main` and no pull request has had a second reviewer. The
-policy above describes how the project is run once there is more than one
-contributor; recording the gap is more useful than pretending it isn't there.
+This project has a single contributor, so no pull request has had a second
+reviewer: GitHub does not let an author approve their own pull request, and the
+branch protection rule recorded below therefore requires zero approvals. That
+remains a real gap, not a solved problem — recording it is more useful than
+pretending otherwise.
+
+Commits through Lecture 19 went directly to `main`. From Lecture 20 onward they
+cannot: every other part of this policy is now enforced mechanically.
 
 ## Commit Message Conventions
 
@@ -43,3 +47,17 @@ the commit log into an audit trail rather than a list to scroll through.
 Commits before Lecture 17 use the type prefix but not consistently the scope,
 and two early commits predate the convention entirely. History is not being
 rewritten; the convention applies from here forward.
+
+## CI Enforcement (Lecture 20)
+
+`main` is a protected branch:
+
+- Required status checks: `dependency-audit`, `server-tests`, `client-tests`,
+  `e2e-tests`, `docker-build`
+- No direct pushes to `main`; every change arrives by pull request
+- Branches must be up to date with `main` before merging
+- The rule applies to administrators too
+
+This turns Lecture 17's "`main` is always deployable" from a documented
+intention into a mechanically enforced guarantee: a pull request cannot merge
+until every required check has passed.
