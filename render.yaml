@@ -1,0 +1,57 @@
+# render.yaml
+#
+# Infrastructure as Code in a small form: this file declares Inkwell's
+# free-tier infrastructure once, reviewably, instead of it being clicked
+# together by hand in Render's dashboard.
+
+services:
+  - type: web
+    name: inkwell-staging
+    runtime: image
+    plan: free
+    image:
+      url: ghcr.io/ansel-stinnett/inkwell-server:e260b46e7a96c8adb7da55cc4d2e8faa564b1b09
+      creds:
+        fromRegistryCreds:
+          name: ghcr-read-packages
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: inkwell-db
+          property: connectionString
+      - key: NODE_ENV
+        value: staging
+      - key: ACCESS_TOKEN_SECRET
+        generateValue: true
+      - key: REFRESH_TOKEN_SECRET
+        generateValue: true
+
+  - type: web
+    name: inkwell-production
+    runtime: image
+    plan: free
+    image:
+      url: ghcr.io/ansel-stinnett/inkwell-server:e260b46e7a96c8adb7da55cc4d2e8faa564b1b09
+      creds:
+        fromRegistryCreds:
+          name: ghcr-read-packages
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: inkwell-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      - key: ACCESS_TOKEN_SECRET
+        generateValue: true
+      - key: REFRESH_TOKEN_SECRET
+        generateValue: true
+
+databases:
+  - name: inkwell-db
+    plan: free
+    # Free-tier caveat recorded where it is provisioned rather than
+    # discovered by surprise later: this database expires 30 days after
+    # creation and must be recreated or moved to a paid plan.
