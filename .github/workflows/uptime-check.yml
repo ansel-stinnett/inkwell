@@ -1,0 +1,24 @@
+# .github/workflows/uptime-check.yml
+#
+# Continuous monitoring: triggered by TIME, not by a code change. It exists
+# purely to watch the already-deployed system.
+
+name: Staging Uptime Check
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping staging health endpoint
+        run: curl -fsS --max-time 120 --retry 2 --retry-delay 10 "$STAGING_URL/api/health"
+        env:
+          STAGING_URL: ${{ vars.STAGING_URL }}
+        # --max-time 120 covers Render's roughly one-minute wake-up; a check
+        # that still fails after two retries means the service is down.
