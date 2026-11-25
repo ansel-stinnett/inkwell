@@ -1,0 +1,79 @@
+# .github/workflows/cd-staging.yml
+#
+# Continuous Delivery: this workflow does NOT rebuild or re-test anything.
+# It picks up exactly where ci.yml left off, deploying the image GHCR
+# already received.
+
+name: Deploy to Staging
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+  # Two merges in quick succession queue their deploys instead of racing.
+
+jobs:
+  deploy-staging:
+    # Only a successful CI run for a PUSH to main published an image
+    # (ci.yml's prepare-deployment-artifact runs only on push).
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ vars.STAGING_URL }}
+      # This job can only ever read the staging RENDER_DEPLOY_HOOK, never
+      # production's, even though the secret name is the same in both.
+    env:
+      APP_URL: ${{ vars.STAGING_URL }}
+      DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+      SHA: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - name: Check out the load-test scripts
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Deploy the exact CI-tested image to Render
+        run: |
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/inkwell-server:${SHA}"
+          echo "Deploying $IMAGE"
+          curl -fsS -X POST "${DEPLOY_HOOK}&imgURL=${IMAGE}"
+        # Render is told exactly which already-built, already-tested tag to
+        # pull. It never rebuilds from source for this request.
+
+      - name: Wait for staging to respond
+        run: |
+          for attempt in $(seq 1 40); do
+            if curl -fsS --max-time 30 "$APP_URL/api/health"; then
+              echo; echo "Staging answered on attempt $attempt"; exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::Staging did not answer within 10 minutes"; exit 1
+
+      - name: Run smoke tests against staging
+        run: |
+          curl -fsS --max-time 30 "$APP_URL/api/health"; echo
+          curl -fsS --max-time 30 "$APP_URL/api/posts?page=1" > /dev/null
+          echo "Smoke tests passed"
+        # Deliberately minimal — the full suite already ran in CI. /api/health
+        # never touches the database, so /api/posts is what proves the
+        # database is reachable and migrated.
+
+      - name: Load test (informational)
+        continue-on-error: true
+        run: docker run --rm -i -e BASE_URL="$APP_URL" grafana/k6:latest run - < load-tests/feed.k6.js
+        # A slow run is recorded in the log but never blocks the deployment.
+
+      - name: Notify team of deployment result
+        if: always()
+        run: |
+          echo "Staging deployment of ${SHA}: ${{ job.status }}"
