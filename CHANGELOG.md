@@ -2,6 +2,22 @@
 
 All notable changes to Inkwell are recorded here.
 
+## [Unreleased]
+
+### Added
+
+- Registration page at `/register` that signs the new user in
+- Navigation reflects whether you are signed in, with a Log out button
+- `/write` redirects to `/login` when signed out, and an expired session
+  while publishing signs you out
+- Feed posts show their author and publish date
+
+### Changed
+
+- Register and login return the shared `toPublicUser()` projection
+  (`{ id, displayName }`); `email` is no longer included
+- The post editor no longer sends an `authorId`
+
 ## [0.5.0] - 2026-11-06
 
 ### Added
