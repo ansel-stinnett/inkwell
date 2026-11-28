@@ -11,6 +11,11 @@ All endpoints are prefixed with `/api`. Every error response uses the shape:
 }
 ```
 
+`UserPublic` is `{ id: string, displayName: string }` — produced only by
+`toPublicUser()` in `server/src/dto/user.dto.js`. It never includes `email`,
+`passwordHash`, or any other column of the user row, and it is the same shape
+for the authenticated user (register, login) as for a post's `author`.
+
 ---
 
 ## POST /api/auth/register

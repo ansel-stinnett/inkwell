@@ -1,12 +1,11 @@
 // server/src/dto/user.dto.js
 //
 // Sensitive-data-exposure prevention, made structural: one function that
-// defines exactly what's safe to expose about ANOTHER user, so no route
-// handler can leak a field by forgetting to strip it.
+// defines exactly what's safe to expose about a user, so no route handler
+// can leak a field by forgetting to strip it.
 //
-// Distinct from AuthService's own toPublicUser, which shapes the
-// authenticated user's view of themselves and may include their email.
-// This one is for other people's data embedded in public responses.
+// Used everywhere a user crosses the API boundary: post authors in the
+// feed and search results, and the user returned by register and login.
 
 export function toPublicUser(user) {
   return {

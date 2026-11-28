@@ -73,6 +73,35 @@ test("a registered user can then log in with the same credentials (US-01 + US-02
   expect(loginRes.body.user.passwordHash).toBeUndefined();
 });
 
+// Regression guard for a missing logger import in AuthService.login: a
+// ReferenceError there surfaced as a 400 BAD_REQUEST instead of a 401.
+test("logging in with a wrong password is rejected with 401", async () => {
+  await request(app)
+    .post("/api/auth/register")
+    .send({ email: "carol@example.com", displayName: "Carol", password: "correcthorse" });
+
+  const res = await request(app)
+    .post("/api/auth/login")
+    .send({ email: "carol@example.com", password: "not-the-password" });
+
+  expect(res.status).toBe(401);
+  expect(res.body.error.code).toBe("INVALID_CREDENTIALS");
+});
+
+test("register and login return only the public user projection", async () => {
+  const registerRes = await request(app)
+    .post("/api/auth/register")
+    .send({ email: "dave@example.com", displayName: "Dave", password: "correcthorse" });
+
+  const loginRes = await request(app)
+    .post("/api/auth/login")
+    .send({ email: "dave@example.com", password: "correcthorse" });
+
+  const expected = { id: registerRes.body.user.id, displayName: "Dave" };
+  expect(registerRes.body.user).toEqual(expected);
+  expect(loginRes.body.user).toEqual(expected);
+});
+
 // Security regression test for the threat model's Critical row: Alice sends
 // her own valid token but puts Bob's id in the body. The post must be
 // attributed to Alice, not Bob.

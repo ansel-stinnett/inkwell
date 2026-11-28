@@ -7,6 +7,9 @@ import { UserRepository } from "../repositories/user.repository.js";
 import { assertNonEmpty, ValidationError } from "../utils/validation.js";
 import { TokenService } from "./token.service.js";
 import { logger } from "../lib/logger.js";
+// The one projection of a User that may cross the API boundary
+// (UserPublic in docs/design/api-contract.md). Never return the row itself.
+import { toPublicUser } from "../dto/user.dto.js";
 // Section 4.5's "Magic Numbers" anti-pattern, corrected: the bcrypt
 // cost factor and minimum password length are now named constants,
 // not bare literals a future reader would have to guess the meaning of.
@@ -16,16 +19,6 @@ class WeakPasswordError extends Error {}
 class InvalidCredentialsError extends Error {}
 
 const MIN_PASSWORD_LENGTH = 8;
-// Projects a User entity down to the UserPublic shape promised by the
-// API contract (docs/design/api-contract.md). Fields like passwordHash
-// are internal and must never cross the API boundary.
-function toPublicUser(user) {
-  return {
-    id: user.id,
-    email: user.email,
-    displayName: user.displayName,
-  };
-}
 export const AuthService = {
   async register({ email, displayName, password }) {
     assertNonEmpty(email, "email", "MISSING_EMAIL");
