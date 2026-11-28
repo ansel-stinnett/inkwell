@@ -6,7 +6,8 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getToken, getUser } from "../lib/auth";
+import { getToken } from "../lib/auth";
+import { useAuth } from "../lib/auth-context";
 
 const STATES = { IDLE: "idle", EDITING: "editing", PUBLISHING: "publishing" };
 
@@ -16,6 +17,7 @@ export function PostEditor() {
   const [body, setBody] = useState("");
   const [errorMessage, setErrorMessage] = useState(null);
   const navigate = useNavigate();
+  const { signOut } = useAuth();
 
   async function handlePublish() {
     setStatus(STATES.PUBLISHING);
@@ -28,8 +30,17 @@ export function PostEditor() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${getToken()}`,
         },
-        body: JSON.stringify({ title, body, authorId: getUser()?.id }),
+        // No authorId: the server takes the author from the verified token.
+        body: JSON.stringify({ title, body }),
       });
+
+      if (response.status === 401) {
+        // The token is missing, expired or invalid, so the stored session is
+        // stale. Clear it and send the user to log in again.
+        signOut();
+        navigate("/login");
+        return;
+      }
 
       if (!response.ok) {
         const { error } = await response.json();

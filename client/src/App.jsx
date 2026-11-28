@@ -6,22 +6,35 @@
 // in Lecture 5.
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./components/AuthProvider";
 import { NavBar } from "./components/NavBar";
 import { Feed } from "./components/Feed";
 import { PostEditor } from "./components/PostEditor";
 import { LoginForm } from "./components/LoginForm";
+import { RegisterForm } from "./components/RegisterForm";
+import { RequireAuth } from "./components/RequireAuth";
 
 export default function App() {
   return (
     <BrowserRouter>
-      <NavBar />
+      <AuthProvider>
+        <NavBar />
         <main className="w-full px-4 py-6 md:max-w-2xl md:mx-auto md:px-6 md:py-8">
-  <Routes>
-    <Route path="/" element={<Feed />} />
-    <Route path="/write" element={<PostEditor />} />
-    <Route path="/login" element={<LoginForm />} />
-  </Routes>
-</main>
+          <Routes>
+            <Route path="/" element={<Feed />} />
+            <Route
+              path="/write"
+              element={
+                <RequireAuth>
+                  <PostEditor />
+                </RequireAuth>
+              }
+            />
+            <Route path="/login" element={<LoginForm />} />
+            <Route path="/register" element={<RegisterForm />} />
+          </Routes>
+        </main>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
