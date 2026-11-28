@@ -127,10 +127,11 @@ jobs:
     env:
       DATABASE_URL: postgresql://inkwell:inkwell@localhost:5432/inkwell_test
       NODE_ENV: test
-      # authRateLimiter (Lecture 15) skips itself when NODE_ENV=test. Without
-      # this, the limit of 5 auth requests per 10 minutes per IP is spent by
-      # the first two viewports (register + login each), so the third
-      # viewport's login is rejected and the test fails in CI only.
+      # authRateLimiter (Lecture 15) skips itself when NODE_ENV=test, so the
+      # limiter is OFF in this job. Locally it is on. publish-flow.spec.js
+      # runs two viewports with register + login each (4 auth requests), which
+      # keeps it under the limit of 5 per 10 minutes per IP even with the
+      # limiter active.
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -159,9 +160,10 @@ jobs:
       - name: Install the Chromium browser
         run: npx playwright install --with-deps chromium
       - name: Run end-to-end tests
-        # Chromium only on every pull request: fast, and it keeps the
-        # publish-flow test's sign-ups under the auth rate limit of 5 per 10
-        # minutes per IP. Firefox and WebKit belong in a scheduled run.
+        # Chromium only on every pull request: fast, and with the limiter
+        # active (as it is locally) it keeps the publish-flow test's 4 auth
+        # requests under the limit of 5 per 10 minutes per IP. Firefox and
+        # WebKit belong in a scheduled run.
         run: npx playwright test --project=chromium
       - name: Upload the Playwright report
         if: failure()
