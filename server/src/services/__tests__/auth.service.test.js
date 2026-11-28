@@ -1,4 +1,5 @@
 import { jest } from "@jest/globals";
+import bcrypt from "bcrypt";
 
 const mockUserRepository = {
   findByEmail: jest.fn(),
@@ -16,8 +17,31 @@ jest.unstable_mockModule("../token.service.js", () => ({
   TokenService: mockTokenService,
 }));
 
-const { AuthService, EmailAlreadyRegisteredError, WeakPasswordError, ValidationError } =
-  await import("../auth.service.js");
+const mockLogger = { warn: jest.fn() };
+jest.unstable_mockModule("../../lib/logger.js", () => ({
+  logger: mockLogger,
+}));
+
+const {
+  AuthService,
+  EmailAlreadyRegisteredError,
+  WeakPasswordError,
+  InvalidCredentialsError,
+  ValidationError,
+} = await import("../auth.service.js");
+
+// A full database row, as Prisma returns it: everything the client must
+// never see is present here so the tests can prove it is stripped.
+function fullUserRow(overrides = {}) {
+  return {
+    id: "u1",
+    email: "a@x.com",
+    displayName: "Alice",
+    passwordHash: "$2b$04$not-a-real-hash",
+    isVerified: false,
+    ...overrides,
+  };
+}
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -80,5 +104,57 @@ describe("AuthService.register", () => {
     await expect(
       AuthService.register({ email: "a@x.com", displayName: "Alice", password: "correcthorse" })
     ).rejects.toBeInstanceOf(EmailAlreadyRegisteredError);
+  });
+});
+
+describe("AuthService.register response shape", () => {
+  test("returns only the public projection of the created user, never the row", async () => {
+    mockUserRepository.findByEmail.mockResolvedValue(null);
+    mockUserRepository.create.mockResolvedValue(fullUserRow());
+
+    const result = await AuthService.register({
+      email: "a@x.com",
+      displayName: "Alice",
+      password: "correcthorse",
+    });
+
+    expect(result.user).toEqual({ id: "u1", displayName: "Alice" });
+  });
+});
+
+describe("AuthService.login", () => {
+  test("rejects an unknown email with InvalidCredentialsError and logs it", async () => {
+    mockUserRepository.findByEmail.mockResolvedValue(null);
+
+    await expect(
+      AuthService.login({ email: "nobody@x.com", password: "correcthorse" })
+    ).rejects.toBeInstanceOf(InvalidCredentialsError);
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.objectContaining({ event: "auth.login.failed", reason: "no_such_user" }),
+      expect.any(String)
+    );
+  });
+
+  test("rejects a wrong password with InvalidCredentialsError and logs it", async () => {
+    const passwordHash = await bcrypt.hash("correcthorse", 4);
+    mockUserRepository.findByEmail.mockResolvedValue(fullUserRow({ passwordHash }));
+
+    await expect(
+      AuthService.login({ email: "a@x.com", password: "wrong-password" })
+    ).rejects.toBeInstanceOf(InvalidCredentialsError);
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.objectContaining({ event: "auth.login.failed", reason: "bad_password" }),
+      expect.any(String)
+    );
+  });
+
+  test("returns only the public projection of the user on success", async () => {
+    const passwordHash = await bcrypt.hash("correcthorse", 4);
+    mockUserRepository.findByEmail.mockResolvedValue(fullUserRow({ passwordHash }));
+
+    const result = await AuthService.login({ email: "a@x.com", password: "correcthorse" });
+
+    expect(result.user).toEqual({ id: "u1", displayName: "Alice" });
+    expect(result.accessToken).toBe("fake-access");
   });
 });

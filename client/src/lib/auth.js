@@ -1,9 +1,9 @@
 // client/src/lib/auth.js
 //
-// Minimal token and user storage. PostEditor needs the logged-in user's
-// id to send as authorId — the server doesn't derive identity from the
-// token until Lecture 15's requireAuth middleware, so until then the
-// client is the only source of authorId.
+// Minimal token and user storage in localStorage. Components sign in and
+// out only through useAuth() (lib/auth-context.js), never by calling the
+// save/clear functions here, so the UI re-renders when the user changes. The stored user is only
+// for display; the server derives identity from the token alone.
 
 const TOKEN_KEY = "inkwell_access_token";
 const USER_KEY = "inkwell_user";

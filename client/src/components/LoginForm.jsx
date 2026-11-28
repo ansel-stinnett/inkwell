@@ -6,7 +6,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { saveToken, saveUser } from "../lib/auth";
+import { useAuth } from "../lib/auth-context";
 
 const STATES = { IDLE: "idle", SUBMITTING: "submitting" };
 
@@ -16,6 +16,7 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState(null);
   const navigate = useNavigate();
+  const { signIn } = useAuth();
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -37,8 +38,7 @@ export function LoginForm() {
       }
 
       const { accessToken, user } = await response.json();
-      saveToken(accessToken);
-      saveUser(user);
+      signIn(accessToken, user);
       navigate("/");
     } catch {
       setErrorMessage("Something went wrong. Please try again.");
